@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User table</title>
+</head>
+<body>
+<h2>Список пользователей</h2>
+    <table>
+        <thead><tr><th>Имя</th><th>Возраст</th><th></th></tr></thead>
+        <tbody>
+        </tbody>
+    </table>
+    <script>
+        async function getUsers() {
+            const response = await fetch("/user/all", {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+
+            const users = await response.json();
+            const rows = document.querySelector("tbody");
+
+            users.forEach(user => rows.append(row(user)));
+        }
+
+        async function editUser(userId, userName, userAge) {
+            const response = await fetch("api/users", {
+                method: "PUT",
+                headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: userId,
+                    name: userName,
+                    age: parseInt(userAge, 10)
+                })
+            });
+
+            const user = await response.json();
+            document.querySelector(`tr[data-rowid='${user.id}']`).replaceWith(row(user));
+        }
+
+        async function deleteUser(id) {
+            const response = await fetch(`/users/${id}`, {
+                method: "DELETE",
+                headers: { "Accept": "application/json" }
+            });
+            const user = await response.json();
+            document.querySelector(`tr[data-rowid='${user.id}']`).remove();
+        }
+
+        function row(user) {
+            const tr = document.createElement("tr");
+            tr.setAttribute("data-rowid", user.id);
+
+            const nameTd = document.createElement("td");
+            nameTd.append(user.username);
+            tr.append(nameTd);
+
+            const emailTd = document.createElement("td");
+            emailTd.append(user.email);
+            tr.append(emailTd);
+
+            const linksTd = document.createElement("td");
+
+            const editLink = document.createElement("button");
+            editLink.append("Изменить");
+            editLink.addEventListener("click", async() => await getUser(user.id));
+            linksTd.append(editLink);
+
+            const removeLink = document.createElement("button");
+            removeLink.append("Удалить");
+            removeLink.addEventListener("click", async () => await deleteUser(user.id));
+
+            linksTd.append(removeLink);
+            tr.appendChild(linksTd);
+
+            return tr;
+        }
+
+        getUsers();
+    </script>
+</body>
+</html>
